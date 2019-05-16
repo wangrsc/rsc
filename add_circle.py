@@ -35,14 +35,14 @@ def add_circle(img, vx, vy, vr, color=257, line_width=2, flag_scale_image=1, fla
 
      """
     if flag_scale_image:
-        scale_array(img, 0, 250)
+        img = scale_array(img, 0, 250)
 
     if vr.size == 0:
         print('No circles to add!')
     else:
-        vx = np.round(vx)
-        vy = np.round(vy)
-        vr = np.round(vr)
+        vx = np.round(np.squeeze(vx))
+        vy = np.round(np.squeeze(vy))
+        vr = np.round(np.squeeze(vr))
         box_line_w = line_width
 
         nr = np.prod(vr.shape)
@@ -56,7 +56,7 @@ def add_circle(img, vx, vy, vr, color=257, line_width=2, flag_scale_image=1, fla
         # loop over vesicles having a non-zero radius
         for i in range(0, int(n_disk)):
             if vr[i] > 0:
-                boxr = vr[i]  # box radius
+                boxr = int(vr[i])  # box radius
                 boxn = 2 * (boxr + box_line_w) + 1
                 disc_small = disc(boxn, boxr).astype(int)
                 box_add0 = disc(boxn, boxr + box_line_w) - disc_small  # a circle (pixels in line are one)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# import numpy as np
+import numpy as np
 
 
 def scale_array(x, lower=0, upper=1):

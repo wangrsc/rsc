@@ -123,7 +123,7 @@ def batch_refit_subtract_new_withPOPC_in_folder_parfor_2019(
             # info_ctf.star_file = star_file
 
         print(f'*** Reading vesicle info: {ves_file}')
-        mx1d, my1d, mr1d, mp1d, __ =  read_box_e_m(ves_file)
+        mx1d, my1d, mr1d, mp1d, __ = read_box_e_m(ves_file)
 
         # ===================================================
         # The following was used to delete fake vesicles at the end of each file.
@@ -191,7 +191,7 @@ def batch_refit_subtract_new_withPOPC_in_folder_parfor_2019(
             mr1d = mr1d_in
             del mr1d_in
 
-        # to dos
+        # TODO
         """
         if flag_mask_part_for_ves_fit:
             [im, mxnew, mynew, mrnew, mpnew]=subtract_vesicles_POPC_ect_2019(im,mx1d,my1d,mr1d,mp1d,pixelsize,info_ctf,model_type,im_mask)

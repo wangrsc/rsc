@@ -64,5 +64,6 @@ if __name__ == '__main__':
     dm3 = downsamplen(b, 3)
     dm5 = downsamplen(b, 5)
     dm7 = downsamplen(b, 7)
+
     scipy.io.savemat('test_output/test_downsample.mat',
                      {'data': b, 'dm2': dm2, 'dm3': dm3, 'dm5': dm5, 'dm7': dm7})

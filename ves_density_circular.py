@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 import numpy as np
+import scipy.io
 
-
-def ves_density_circular(n, pixelsize, a, d=None, t=None, cp=None, wth=None,
-                         x=None, y=None, scale=None, full_return=False):
+def ves_density_circular(n, pixelsize, a, d=50, t=0.2, cp=0.05, wth=4.2,
+                         x=None, y=None, scale=None, ion=0.0, full_return=False):
     """
     Density of a circular vesicle.
     Using ndgrid instead of meshgrid since ndgrid will generate i,j in matrix
@@ -30,14 +30,6 @@ def ves_density_circular(n, pixelsize, a, d=None, t=None, cp=None, wth=None,
         x = np.floor(n / 2 + 1)
     if y is None:
         y = np.floor(n / 2 + 1)
-    if t is None:
-        t = 0.2
-    if cp is None:
-        cp = 0.05
-    if d is None:
-        d = 50
-    if wth is None:
-        wth = 4.2
     if scale is None:
         if a / pixelsize > 50 * 2:
             scale = 1
@@ -62,7 +54,7 @@ def ves_density_circular(n, pixelsize, a, d=None, t=None, cp=None, wth=None,
     cp_out = (a + wth)
 
     # Make zero at x,y (center of the nxn image)
-    yy, xx = np.meshgrid(np.arange(1-x, n-x+1), np.arange(1-y, n-y+1))
+    yy, xx = np.meshgrid(np.arange(1-y, n-y+1), np.arange(1-x, n-x+1))
     # index into the radial function
     rr = scale * np.sqrt(xx**2 + yy**2) + 1
     nr = np.floor(np.max(rr)) + 1
@@ -90,8 +82,9 @@ def ves_density_circular(n, pixelsize, a, d=None, t=None, cp=None, wth=None,
     cp_out = np.real(xp * np.sqrt(cp_out**2 - xp**2) + cp_out**2 * np.arcsin(xp / cp_out)
                      - xm * np.sqrt(cp_out**2 - xm**2) - cp_out**2 * np.arcsin(xm / cp_out))
     #
-    dd[0:int(nr)] = (w1 - w0) * 1.0 + (t_in - w0) * t + (w1 - t_out) * t - (cp_out - cp_in) * cp
 
+    dd[0:int(nr)] = (w1 - w0) * 1.0 + (t_in - w0) * t + (w1 - t_out) * t - (cp_out - cp_in) * cp + w0 * ion
+    scipy.io.savemat('test_output/test2.mat', {'w0': w0, 'ion': ion})
     r0 = np.floor(rr)
     rf = rr - r0
     r0 = r0.astype('int', copy=False)
@@ -106,6 +99,10 @@ def ves_density_circular(n, pixelsize, a, d=None, t=None, cp=None, wth=None,
 
 
 if __name__ == "__main__":
-    ww, dd, scale = ves_density_circular(426, 1.056, 49.632, 50, full_return=True)
     import scipy.io
-    scipy.io.savemat('test_output/test_ves_density.mat', {'w': ww, 'd': dd, 'scale': scale})
+
+    # ww, dd, scale = ves_density_circular(426, 1.056, 49.632, 50, 0.1, full_return=True)
+    # scipy.io.savemat('test_output/test_ves_density.mat', {'w': ww, 'd': dd, 'scale': scale})
+
+    mw, md, mscale = ves_density_circular(426, 1.056, 49.632, 50, 0.1, 0.05, 4.2, 214, 214, 4, 0.2, full_return=True)
+    scipy.io.savemat('test_output/test_ves_density2.mat', {'mw': mw, 'md': md, 'mscale': mscale})

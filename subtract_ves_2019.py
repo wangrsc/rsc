@@ -3,14 +3,23 @@
 import numpy as np
 import scipy.io
 import debug
+
 from get_ctf_for_vesicle_subtraction import get_ctf_for_vesicle_subtraction
 from generate_3d_map_radial_2018 import generate_3d_map_radial_2018
 from apply_filter import apply_filter
 
+from gauss_filt import gauss_filt
 
-def subtract_ves_2019(data_in, fx, fy, mx, my, mr, mp, pixelsize, info_ctf, displaymode=1):
+import matplotlib.pyplot as plt
+from imgray import imgray
+from imcolor import imcolor
+from add_circle import add_circle
+
+
+def subtract_ves_2019(data_in, fx, fy, mx, my, mr, mp, pixelsize, info_ctf, displaymode=0):
     """
-    This is used to subtract a set of vesicles from micrograph in.
+    This is used to subtract a set of vesicles from input micrograph.
+    Just subtraction, no fitting.
 
     args:
         data_in: a 2D array
@@ -78,38 +87,45 @@ def subtract_ves_2019(data_in, fx, fy, mx, my, mr, mp, pixelsize, info_ctf, disp
             small_now[cutx0: cutx1, cuty0: cuty1] = data_after_sub[xt0: xt1, yt0: yt1]
 
     if displaymode:
-        print('This needs to be done to show the image.')
+        print('... prepare images to display...')
+        plt.subplot(1, 2, 1)
+        imf = gauss_filt(data_in, 0.2)
+        imd = add_circle(imf, mx, my, np.maximum(mr / pixelsize - 20, 20), flag_display_image=0, flag_scale_image=1)
+        imcolor(imd)
+        plt.title('Original')
+        plt.subplot(1, 2, 2)
+        imgray(gauss_filt(small_now, 0.2))
+        plt.title('After subtraction')
+        plt.show()
 
     return small_now
 
 
 if __name__ == "__main__":
     # import time
-    data = debug.load_mat_var("data/subtract_ves_2019_in.mat", "in")
     fx = debug.load_mat_var("data/subtract_ves_2019_in.mat", "fx")
     fx.shape = (fx.shape[1],)
     fy = debug.load_mat_var("data/subtract_ves_2019_in.mat", "fy")
     fy.shape = (fy.shape[1],)
-    mx = debug.load_mat_var("data/subtract_ves_2019_in.mat", "mx")
-    mx.shape = (mx.shape[1],)
-    # mx.shape = (400, )
-    my = debug.load_mat_var("data/subtract_ves_2019_in.mat", "my")
-    # my.shape = (400, )
-    my.shape = (my.shape[1],)
-    mr = debug.load_mat_var("data/subtract_ves_2019_in.mat", "mr")
-    # mr.shape = (400, )
-    mr.shape = (mr.shape[1],)
-    mp = debug.load_mat_var("data/subtract_ves_2019_in.mat", "mp")
-    # mp.shape = (400, )
-    mp.shape = (mp.shape[1],)
+
     pixelsize = debug.load_mat_var("data/subtract_ves_2019_in.mat", "pixelsize")
     info_ctf = {"defocus": 1.4398, "bfactor": 48, "lambda": 0.0197, "Cs": 2.7, "qfactor": 0.07, "flag_prewhiten": 0,
                 "deltadef": 0.0073, "theta": 0.3649}
 
-    nn = len(mx)
+    import scipy.io
+    from read_box_e_m import read_box_e_m
+
+    mx, my, mr, mp, __ = read_box_e_m(
+        'data/18jun07c_em6b_00002gr_00010sq_v01_00002hl_v01_00005en.framescor2x_DW_dmBIN01.mrc_resub44_screen.txt')
+
+    a = scipy.io.loadmat('data/image.mat')
+    data = a['img']
+
+    nn = np.size(mx)
 
     # t1 = time.time()
-    res_out = subtract_ves_2019(data, fx, fy, mx[0:nn], my[0:nn], mr[0:nn], mp[0:nn], pixelsize, info_ctf)
+    res_out = subtract_ves_2019(data, fx, fy, mx[0:nn], my[0:nn], mr[0:nn], mp[0:nn],
+                                pixelsize, info_ctf, displaymode=1)
     # t2 = time.time() - t1
     # print(t2)
     scipy.io.savemat('test_output/test_subtract_ves.mat', {'from_python': res_out, 'info_ctf': info_ctf,

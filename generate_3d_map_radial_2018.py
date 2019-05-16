@@ -24,7 +24,8 @@ def generate_3d_map_radial_2018(fx, fy, r_here, half_size, flag_accuracy=4):
 
     # get fx interval which will be used for lookup
     if np.abs((fx[1]-fx[0]) - (fx[-1]-fx[-2])) < np.abs(((fx[1]-fx[0])/len(fx)/10000)):  # a regular grid
-        fx_interval_inv = 1 / (fx[1]-fx[0])
+        # fx_interval_inv = 1 / (fx[1]-fx[0])
+        fx_interval_inv = (np.size(fx) - 1) / (fx[-1] - fx[0])
         # nx = fx.size
     else:
         print("The membrane profile is not on a regular grid.")

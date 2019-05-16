@@ -17,11 +17,15 @@ from num2strn import num2strn
 from get_files_having_pattern import get_files_having_pattern
 from get_base_filename import get_base_filename
 
+from least_square import least_square, least_square_1d
+from sphere_fit_main import sphere_fit_main
+
 from downsamplen import downsamplen, downsample2
 from scale_array import scale_array, scale_image
 from remove_1d_array_elements import remove_array_elements
 
 from gauss_filt import gauss_filt, gauss_filt_1d
+from shift_array import shift_array
 
 from pad_pic import pad_pic
 from norm_ref_e_mean import norm_ref_e_mean
