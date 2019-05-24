@@ -42,6 +42,28 @@ def get_ctf_for_vesicle_subtraction(info_ctf, pixelsize, n_here):
 
             ctf = npfft.fftshift(ctf_lwq(n_here, pixelsize, lambda_, defocus, cs, bfactor, qfactor))
             # ctf is not centered, but is ready to be convoluted with image.
+    else:
+        if 'deltadef' in info_ctf:  # 2D ctf parameters
+            spar = {'n': n_here, 'pixelsize': pixelsize}
+            ctf = npfft.fftshift(contrast_transfer_astig(spar, info_ctf))
+
+        else:  # % 1D ctf files
+            lambda_ = info_ctf['lambda']
+            defocus = info_ctf['defocus']
+            cs = info_ctf['Cs']
+
+            if hasattr(info_ctf, 'B'):
+                bfactor = info_ctf['B']
+            elif hasattr(info_ctf, 'bfactor'):
+                bfactor = info_ctf['bfactor']
+
+            if hasattr(info_ctf, 'alpha'):
+                qfactor = info_ctf['alpha']
+            elif hasattr(info_ctf, 'qfactor'):
+                qfactor = info_ctf['qfactor']
+
+            ctf = npfft.fftshift(ctf_lwq(n_here, pixelsize, lambda_, defocus, cs, bfactor, qfactor))
+            # ctf is not centered, but is ready to be convoluted with image.
 
     return ctf
 

@@ -43,7 +43,7 @@ def write_mrc(vol, pixel_size, filename, mode=2, flag_relion_center=0):
     fd = open(filename, 'wb')  # binary mode
 
     # The first ten integers
-    shape = vol.shape
+    shape = np.shape(vol)
     nx = shape[0]
     ny = shape[1]
     if len(shape) > 2:

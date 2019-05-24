@@ -67,7 +67,7 @@ def subtract_ves_2019(data_in, fx, fy, mx, my, mr, mp, pixelsize, info_ctf, disp
             cutw_half = int(cutw / 2)
 
             data = np.zeros((cutw, cutw))
-            print(i)
+            # print(i)
 
             data[cutw_half - (x0 - cutx0): cutw_half + (cutx1 - x0), cutw_half - (y0 - cuty0): cutw_half + (
                     cuty1 - y0)] = small_now[cutx0: cutx1, cuty0: cuty1]

@@ -84,7 +84,7 @@ def ves_density_circular(n, pixelsize, a, d=50, t=0.2, cp=0.05, wth=4.2,
     #
 
     dd[0:int(nr)] = (w1 - w0) * 1.0 + (t_in - w0) * t + (w1 - t_out) * t - (cp_out - cp_in) * cp + w0 * ion
-    scipy.io.savemat('test_output/test2.mat', {'w0': w0, 'ion': ion})
+    # scipy.io.savemat('test_output/test2.mat', {'w0': w0, 'ion': ion})
     r0 = np.floor(rr)
     rf = rr - r0
     r0 = r0.astype('int', copy=False)

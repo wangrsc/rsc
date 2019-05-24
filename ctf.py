@@ -184,6 +184,30 @@ class ctf():
                             self.ffax[i], self.dvt_original[i], self.dvtfitted[i],
                             self.dvtnoise[i], self.dvtbeam[i]))
 
+    def asDict(self):
+        rtn = {}
+        if hasattr(self, 'defocus'):
+            rtn['defocus'] = self.defocus
+        if hasattr(self, 'bfactor'):
+            rtn['bfactor'] = self.bfactor
+        if hasattr(self, 'lambda'):
+            rtn['lambda'] = getattr(self, 'lambda')
+        if hasattr(self, 'Cs'):
+            rtn['Cs'] = self.Cs
+        if hasattr(self, 'qfactor'):
+            rtn['qfactor'] = self.qfactor
+        if hasattr(self, 'flag_prewhiten'):
+            rtn['flag_prewhiten'] = self.flag_prewhiten
+        if hasattr(self, 'deltadef'):
+            rtn['deltadef'] = self.deltadef
+        if hasattr(self, 'theta'):
+            rtn['theta'] = self.theta
+        return rtn
+
+        # info_ctf = {"defocus": 1.4398, "bfactor": 48, "lambda": 0.0197, "Cs": 2.7, "qfactor": 0.07, "flag_prewhiten": 0,
+        #             "deltadef": 0.0073, "theta": 0.3649}
+
+
 
 
 # below are for debugging purpose
@@ -191,13 +215,16 @@ if __name__ == "__main__":
     #filename = "dm02f-cv_20140831_23321342_2x_SumCorr_block_n.ctf"
     #filename = "18jun07c_em6b_00002gr_00010sq_v01_00002hl_v01_00005en.framescor2x_DW_dmBIN01.mrc.ctf"
     #filename = "17nov12c_jh2_00016gr_00057sq_v02_00011hl_v01_00005es.frames_cvcor2x.mrc-1D.ctf"
-    filename = '18jun07c_em6b_00002gr_00010sq_v01_00002hl_v01_00005en.framescor2x_DW_dmBIN01.mrc.ctf'
+    filename = 'data/18jun07c_em6b_00002gr_00010sq_v01_00002hl_v01_00005en.framescor2x_DW_dmBIN01.mrc.ctf'
     test = ctf(filename)
     # get all attribute name
     attrs = [x for x in dir(test) if x[0] != '_']
     # print all attributes, this should print all values in ctf file
     for x in attrs:
         print("{}: {}".format(x, getattr(test, x)))
+
+    res = test.asDict()
+    print(res)
 
     test = ctf(filename, 1)
     # get all attribute name

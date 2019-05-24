@@ -4,9 +4,11 @@ import numpy as np
 import numpy.fft as npfft
 import scipy.optimize
 import debug
-from least_square import least_square
+from least_square import least_square, least_square_1d
 from generate_3d_map_radial_2018 import generate_3d_map_radial_2018
 from ves_density_circular import ves_density_circular
+from get_membrane_profile import get_membrane_profile
+from shift_array import shift_array
 
 
 def sphere_fit_main(p, mode, n, pixelsize, data, ctf, a, d, t, cp, wth, x=None, y=None, scale=None):
@@ -36,9 +38,9 @@ def sphere_fit_main(p, mode, n, pixelsize, data, ctf, a, d, t, cp, wth, x=None, 
 
     """    
     if (len(data.shape) > 2) and data.shape[2] == 2:  # If data is nxnx2, it includes a mask
+        nzt = data.shape[2]
         data_mask = data[:, :, 1]
         data = data[:, :, 0]
-        nzt = data.shape[2]
     else:
         nzt = 1
 
@@ -51,37 +53,35 @@ def sphere_fit_main(p, mode, n, pixelsize, data, ctf, a, d, t, cp, wth, x=None, 
     elif mode > 1:
         a, x_fit, y_fit = p
         n_here = n
-        # TODO: get_membrane_profile(model_type)
-        """
-        [fxt, fyt, pixelsize_membrane]=get_membrane_profile(model_type)
-        fxt=fxt*pixelsize_membrane/pixelsize % membrane profile is in the same pixelsize as in the image now. 
-        """
-        dd = generate_3d_map_radial_2018(fxt, fyt, a/pixelsize, n_here/2, 1)
 
-        shiftx = np.round(x_fit) - (np.round(n_here/2) + 1) + 1  # Calculate shift for shift_array
-        shifty = np.round(y_fit) - (np.round(n_here/2) + 1) + 1
-        shiftx += ((shiftx<1) * n_here)
-        shifty += ((shifty<1) * n_here)
-        dd = shift_array(D, shiftx, shifty)
+        fxt, fyt, pixelsize_membrane = get_membrane_profile(mode)
+        fxt = fxt * pixelsize_membrane / pixelsize   # membrane profile is in the same pixelsize as in the image now.
+        dd = generate_3d_map_radial_2018(fxt, fyt, a / pixelsize, n_here / 2, 1)
+
+        shiftx = np.round(x_fit) - (np.round(n_here / 2) + 1) + 1  # Calculate shift for shift_array
+        shifty = np.round(y_fit) - (np.round(n_here / 2) + 1) + 1
+        shiftx += ((shiftx < 1) * n_here)
+        shifty += ((shifty < 1) * n_here)
+        dd = shift_array(dd, shiftx, shifty)
     else:
         print('The mode is not chosen correctly!')
         return None
 
-    model = np.real(npfft.ifftn(npfft.fftn(dd) * (ctf)))
+    model = np.real(npfft.ifftn(npfft.fftn(dd) * ctf))
 
-    if (nzt > 1):
+    if nzt > 1:
         ind = np.where(data_mask > 0)
-        lp = LeastSquare1d(data[ind], model[ind])
+        lp = least_square_1d(data[ind], model[ind])
     else:
         lp = least_square(data, model)
 
-
-    if (nzt > 1):
+    if nzt > 1:
         e = np.sum((lp[0] + model*lp[1] - data)**2 * data_mask)
     else:
         e = np.sum((lp[0] + model*lp[1] - data)**2)
 
     return e
+
 
 if __name__ == "__main__":
     par0 = debug.load_mat_var("data/sphere_fit_main_in.mat", "par0")[0, 0]
@@ -99,6 +99,8 @@ if __name__ == "__main__":
     cp = debug.load_mat_var("data/sphere_fit_main_in.mat", "cp")[0, 0]
     wth = debug.load_mat_var("data/sphere_fit_main_in.mat", "wth")[0, 0]
 
-    res = scipy.optimize.fmin(sphere_fit_main, np.array([par0, par1, par2]), (mode, n_here, pixelsize, data_for_opt, Ctf, r0, d, t, cp, wth), xtol=1e0, ftol=1e2, maxiter=2000, maxfun=2000)
-    print(res) # 153.66102702 206.74914238  55.61474384
+    res = scipy.optimize.fmin(sphere_fit_main, np.array([par0, par1, par2]),
+                              (mode, n_here, pixelsize, data_for_opt, Ctf, r0, d, t, cp, wth),
+                              xtol=1e0, ftol=1e2, maxiter=2000, maxfun=2000)
+    print(res)   # 153.66102702 206.74914238  55.61474384
     # MATLAB result: par = [153.6610  206.7491   55.6147]

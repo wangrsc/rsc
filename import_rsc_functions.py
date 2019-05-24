@@ -4,11 +4,17 @@
 from imgray import imgray
 from imcolor import imcolor
 
+from erotate_2d_90 import erotate_2d_90
+
 from add_box import add_box
 from add_circle import add_circle
 from add_cross import add_cross
 from radius import radius
 from polar_to_2d_uniform import polar_to_2d_uniform
+from radial_average import radial_average
+from to_polar import to_polar
+from better_contrast_simple_2d import better_contrast_simple_2d
+from max2d import max2d
 
 from get_num_from_screen import get_num_from_screen
 from get_yes_no import get_yes_no

@@ -4,7 +4,7 @@ import numpy as np
 import os
 from import_rsc_functions import *
 import matplotlib.pyplot as plt
-
+from subtract_vesicles_popc_ect_2019 import subtract_vesicles_popc_ect_2019
 # import time
 
 
@@ -18,16 +18,7 @@ def batch_refit_subtract_new_withPOPC_in_folder_parfor_2019(
         flag_mask_part_for_ves_fit=0, flag_display_image=0, star_filename_after_base=None):
     """
     This is used to resubtract vesicles using different models.
-    CTF file must be image.mrc.ctf
-    Vesicle file is  image.mrc.vestxt
     All files in the same folder!!
-
-    This is 30% slower than the fitting using dumb membrane profile.
-    When calling this function, all parameters need to be given. The default
-    
-    % scaling_of_mp_if_skip_refit_xy: if given, no refit of xy here. Just use
-    % saved mp. The scaling can be less than 1 to leave some bilayer residue.
-    % <=0: means refit!
 
     args:
         file_pattern: a string used to identify the image files 
@@ -35,7 +26,9 @@ def batch_refit_subtract_new_withPOPC_in_folder_parfor_2019(
         model_type: an integer 
         ves_filename_after_base: a string used to construct vesicle info filename 
         ctf_filename_after_base: a string used to construct ctf filename 
-        scaling_of_mp_if_skip_refit_xy: a scalar 
+        scaling_of_mp_if_skip_refit_xy: a scalar
+            If given, no refit of xy here. Just use saved mp.
+            The scaling can be less than 1 to leave some bilayer residue. <=0: means refit!
         flag_mask_part_for_ves_fit: don't subtract particle region. This is not implemented yet. 
         flag_printlay_image: a boolean  
         star_filename_after_base: used to read ctf from Relion files
@@ -85,6 +78,7 @@ def batch_refit_subtract_new_withPOPC_in_folder_parfor_2019(
         mask_k2_edge_setto_0 = pad_pic(np.ones([nx0, ny0]), nx, ny, 0)
 
     # Loop over each image
+    bad_vesicle_amplitude_threshold_saved = 0.1
     for i in range(len(files)):
         print('----------------------------------------')
         print(f'........ ii= {i} ............')
@@ -94,10 +88,10 @@ def batch_refit_subtract_new_withPOPC_in_folder_parfor_2019(
         infilename = files[i]
         ves_file = infilename[0: -n_to_delete_from_end_tobasename] + ves_filename_after_base
         ctf_file = infilename[0: -n_to_delete_from_end_tobasename] + ctf_filename_after_base
-        
+
         print(f'CTF file is {ctf_file}')
         print(f'vesicle file is {ves_file}')
-        
+
         # check ctf and vesicle files
         if not os.path.isfile(ctf_file):
             print(f'*** ctf file does not exist: {ctf_file}')
@@ -109,11 +103,12 @@ def batch_refit_subtract_new_withPOPC_in_folder_parfor_2019(
         print('*** Reading image file ', infilename)
         im, __, __, __ = read_mrc(infilename)
         im0 = np.copy(im)
-            
+
         print(f'*** Reading CTF file {ctf_file}')
         info_ctf = ctf(ctf_file, simple_format=1)
+        info_ctf = info_ctf.asDict()
 
-        ## To dos
+        # TODO: local ctf
         # use gCTF fitted local CTF for each particle in Relion star file format
         if flag_use_local_ctf_from_particle_star_file:
             print('Not implemented yet!')
@@ -136,10 +131,10 @@ def batch_refit_subtract_new_withPOPC_in_folder_parfor_2019(
                 print(f'... Deleting vesicle at ({mx1d[ih]},{my1d[ih]}) with a radius of {mr1d[ih]}')
 
         # To remove vesicles having inf or nan information
-        flag_ves_inf_nan = np.isnan(mx1d) + np.isinf(mx1d) \
-                           + np. isnan(my1d) + np.isinf(my1d) \
-                           + np.isnan(mr1d) + np.isinf(mr1d) \
-                           + np. isnan(mp1d) + np.isinf(mp1d)
+        flag_ves_inf_nan = np.isnan(mx1d) + np.isinf(mx1d)\
+                           + np.isnan(my1d) + np.isinf(my1d)\
+                           + np.isnan(mr1d) + np.isinf(mr1d)\
+                           + np.isnan(mp1d) + np.isinf(mp1d)
         flag_ves = (flag_ves + flag_ves_inf_nan) > 0
 
         # Remove bad vesicles
@@ -179,67 +174,62 @@ def batch_refit_subtract_new_withPOPC_in_folder_parfor_2019(
         """
 
         if flag_mask_edge:
-            im_mask= np.copy(mask_k2_edge_setto_0)
+            im_mask = np.copy(mask_k2_edge_setto_0)
 
         # =========================================
         # If skip fitting, mr1d contains mp1d and mr1d
         mr1d_in = Struct
-        if flag_skip_refit_xy: # use saved mp
+        if flag_skip_refit_xy:  # use saved mp
             mr1d_in.mr1d = mr1d
             mr1d_in.mp1d = mp1d * scaling_of_mp_if_skip_refit_xy
             del mr1d
             mr1d = mr1d_in
             del mr1d_in
 
-        # TODO
-        """
-        if flag_mask_part_for_ves_fit:
-            [im, mxnew, mynew, mrnew, mpnew]=subtract_vesicles_POPC_ect_2019(im,mx1d,my1d,mr1d,mp1d,pixelsize,info_ctf,model_type,im_mask)
+        if flag_mask_edge:
+            im, mxnew, mynew, mrnew, mpnew, __, bad_vesicle_amplitude_threshold_saved = \
+                subtract_vesicles_popc_ect_2019(im, mx1d, my1d, mr1d, mp1d, pixelsize,
+                                                info_ctf, model_type, im_mask, bad_vesicle_amplitude_threshold_saved)
         else:
-            [im, mxnew, mynew, mrnew, mpnew]=subtract_vesicles_POPC_ect_2019(im,mx1d,my1d,mr1d,mp1d,pixelsize,info_ctf,model_type)
-        """
-        # This should be deleted as it is for testing the program
-        im = np.copy(im0)
-        mxnew = mx1d
-        mynew = my1d
-        mrnew = mr1d
-        mpnew = mp1d
+            im, mxnew, mynew, mrnew, mpnew, __, bad_vesicle_amplitude_threshold_save = \
+                subtract_vesicles_popc_ect_2019(im, mx1d, my1d, mr1d, mp1d, pixelsize,
+                                                info_ctf, model_type, im_mask=None,
+                                                bad_vesicle_amplitude_threshold=bad_vesicle_amplitude_threshold_saved)
 
-        file_out = infilename[0: -4] + '_ves' + num2strn(model_type,2) + '.mrc'
+        file_out = infilename[0: -4] + '_ves' + num2strn(model_type, 2) + '.mrc'
 
         write_mrc(im, pixelsize, file_out, 2)
         print(f'Subtracted image was saved to {file_out}')
 
         if not flag_skip_refit_xy:  # vesicle informaiton is fitted
-            pickname = infilename[0: -4] + '_resub' + num2strn(model_type,2) + '.txt'
+            pickname = infilename[0: -4] + '_resub' + num2strn(model_type, 2) + '.txt'
             write_ves_file(pickname, mxnew, mynew, mrnew, mpnew)
             print(f'Vesicle info are saved to {pickname}')
 
-
         if flag_display_image:
-            plt.subplot(1,2,1)
+            plt.subplot(1, 2, 1)
 
-            radius_decrease = np.round(nx/100)
+            radius_decrease = np.round(nx / 100)
             im0 = gauss_filt(im0, 0.15)
-            tt1 = add_circle(scale_image(im0), mxnew, mynew, mrnew/pixelsize-radius_decrease, 259, 10, 0, 0)
+            tt1 = add_circle(scale_image(im0), mxnew, mynew, mrnew / pixelsize - radius_decrease, 259, 10, 0, 0)
             imcolor(tt1)
             plt.title('Original')
             plt.axis('image')
 
-            plt.subplot(1,2,2)
+            plt.subplot(1, 2, 2)
             im = gauss_filt(im, 0.15)
-            tt1 = add_circle(scale_image(im), mxnew, mynew, mrnew/pixelsize-radius_decrease, 259, 10, 0, 0)
-            imcolor(tt1)
+            # tt1 = add_circle(scale_image(im), mxnew, mynew, mrnew/pixelsize-radius_decrease, 259, 10, 0, 0)
+            imcolor(im)
             plt.title('Vesicle subtracted')
             plt.axis('image')
 
-            plt.savefig(infilename[0: -4] + ".ps")
+            # plt.savefig(infilename[0: -4] + ".ps")
             plt.show()
             # plt.close()
 
+
 if __name__ == "__main__":
-    import os
     os.chdir('data')
     f1 = '*dmBIN01.mrc'
     batch_refit_subtract_new_withPOPC_in_folder_parfor_2019(
-        f1, 1.056, 44, 'dmBIN01.mrc_resub44_screen.txt', 'dmBIN01.mrc.ctf', 0, 0, 1 )
+        f1, 1.056, 44, 'dmBIN01.mrc_resub44_screen.txt', 'dmBIN01.mrc.ctf', 0, 0, 1)

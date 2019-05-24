@@ -92,13 +92,17 @@ if __name__ == '__main__':
     import scipy.io
 
     a = np.random.rand(128, 128, 128, 10)
-    b1d = gauss_filt(a[:, 0, 0, 0], .2)
-    b2d = gauss_filt(a[:, :, 0, 0], .2)
-    b3d = gauss_filt(a[:, :, :, 0], .2)
+    b1d = gauss_filt_1d(a[:, 0, 0, 0], .15)
 
-    b1ds = gauss_filt(a[:, :, 0, 0], .2, 1)
-    b2ds = gauss_filt(a[:, :, :, 0], .2, 1)
-    b3ds = gauss_filt(a[:, :, :, :], .2, 1)
+    scipy.io.savemat('test_output/test99.mat', {'a': a, 'b1d': b1d})
 
-    scipy.io.savemat('test_output/test99.mat', {'a': a, 'b1d': b1d,  'b2d': b2d,  'b3d': b3d,
-                                                'b1ds': b1ds,  'b2ds': b2ds,  'b3ds': b3ds})
+    # b1d = gauss_filt(a[:, 0, 0, 0], .2)
+    # b2d = gauss_filt(a[:, :, 0, 0], .2)
+    # b3d = gauss_filt(a[:, :, :, 0], .2)
+    #
+    # b1ds = gauss_filt(a[:, :, 0, 0], .2, 1)
+    # b2ds = gauss_filt(a[:, :, :, 0], .2, 1)
+    # b3ds = gauss_filt(a[:, :, :, :], .2, 1)
+    #
+    # scipy.io.savemat('test_output/test99.mat', {'a': a, 'b1d': b1d,  'b2d': b2d,  'b3d': b3d,
+    #                                             'b1ds': b1ds,  'b2ds': b2ds,  'b3ds': b3ds})
